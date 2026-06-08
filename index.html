@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Evangelism Report</title>
+  <style>
+    :root {
+      --blue: #2563eb;
+      --blue-dark: #1d4ed8;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --green: #16a34a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Noto Sans KR", "Noto Sans JP", "Noto Sans Myanmar", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-text-size-adjust: 100%;
+    }
+    .wrap { max-width: 560px; margin: 0 auto; padding: 16px 16px 48px; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; margin-bottom: 18px;
+    }
+    .brand { font-size: 15px; font-weight: 700; color: var(--blue); white-space: nowrap; flex-shrink: 0; }
+    .lang-select {
+      font-size: 14px; padding: 7px 10px; border-radius: 10px;
+      border: 1px solid var(--border); background: #fff; color: var(--text);
+    }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 18px; padding: 22px; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    }
+    h1 { font-size: 22px; margin: 0 0 6px; }
+    .subtitle { color: var(--muted); font-size: 14px; margin: 0 0 22px; }
+    label { display: block; font-size: 14px; font-weight: 600; margin: 18px 0 7px; }
+    select, input[type="date"], input[type="text"], textarea {
+      width: 100%; font-size: 16px; padding: 13px 14px;
+      border: 1px solid var(--border); border-radius: 12px;
+      background: #fff; color: var(--text); font-family: inherit;
+    }
+    textarea { min-height: 170px; resize: vertical; line-height: 1.55; }
+    select:focus, input:focus, textarea:focus {
+      outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+    }
+    .btn {
+      width: 100%; margin-top: 24px; padding: 15px; font-size: 17px; font-weight: 700;
+      color: #fff; background: var(--blue); border: none; border-radius: 14px;
+      cursor: pointer; transition: background .15s;
+    }
+    .btn:active { background: var(--blue-dark); }
+    .btn:disabled { opacity: .55; cursor: default; }
+    .toast {
+      margin-top: 16px; padding: 13px 14px; border-radius: 12px;
+      font-size: 15px; font-weight: 600; text-align: center; display: none;
+    }
+    .toast.ok { display: block; background: #dcfce7; color: #166534; }
+    .toast.err { display: block; background: #fee2e2; color: #b91c1c; }
+    .adminlink, .backlink {
+      display: inline-block; margin-top: 22px; font-size: 13px;
+      color: var(--muted); text-decoration: none; cursor: pointer;
+    }
+    .adminlink:hover, .backlink:hover { color: var(--blue); text-decoration: underline; }
+    .center { text-align: center; }
+    .hidden { display: none; }
+    .summary-box {
+      margin-top: 18px; background: #f8fafc; border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px; white-space: pre-wrap;
+      font-size: 14.5px; line-height: 1.6; min-height: 60px; word-break: break-word;
+    }
+    .muted-note { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+    .row { display: flex; gap: 10px; align-items: flex-end; }
+    .row > div { flex: 1; }
+    .spinner { color: var(--muted); font-size: 14px; padding: 12px 0; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <span class="brand">⛪ <span id="brandText">Evangelism Report</span></span>
+    <select id="uiLang" class="lang-select" onchange="changeLang(this.value)">
+      <option value="en">English</option>
+      <option value="ko">한국어</option>
+      <option value="ja">日本語</option>
+      <option value="fr">Français</option>
+      <option value="es">Español</option>
+      <option value="tl">Tagalog</option>
+      <option value="my">မြန်မာ</option>
+    </select>
+  </div>
+
+  <!-- 제출 화면 -->
+  <div id="formView" class="card">
+    <h1 data-i18n="title">Evangelism Report</h1>
+    <p class="subtitle" data-i18n="subtitle"></p>
+
+    <label data-i18n="nameLabel">Your name</label>
+    <select id="name" onchange="onNameChange()">
+      <option value="" data-i18n="selectName"></option>
+    </select>
+    <input type="text" id="nameOther" class="hidden" data-i18n-ph="otherPlaceholder" style="margin-top:8px;">
+
+    <label data-i18n="dateLabel">Date</label>
+    <input type="date" id="date">
+
+    <label data-i18n="contentLabel">Today's evangelism</label>
+    <textarea id="content" data-i18n-ph="contentPlaceholder"></textarea>
+
+    <button class="btn" id="submitBtn" onclick="submitReport()" data-i18n="submitBtn">Submit</button>
+    <div class="toast" id="toast"></div>
+
+    <div class="center">
+      <span class="adminlink" onclick="showAdmin()" data-i18n="adminLink">📋 View summary (admin)</span>
+    </div>
+  </div>
+
+  <!-- 관리자 종합 화면 -->
+  <div id="adminView" class="card hidden">
+    <h1 data-i18n="adminTitle">Summary for Pastor</h1>
+
+    <div class="row">
+      <div>
+        <label data-i18n="adminDateLabel">Date</label>
+        <input type="date" id="adminDate">
+      </div>
+      <button class="btn" style="flex:0 0 auto; width:auto; margin-top:0; padding:13px 20px;"
+              onclick="loadSummary()" data-i18n="loadBtn">Load</button>
+    </div>
+
+    <div id="summaryWrap" class="hidden">
+      <div class="summary-box" id="summaryBox"></div>
+      <button class="btn" onclick="copySummary()" data-i18n="copyBtn">Copy</button>
+      <div class="muted-note" data-i18n="copyNote"></div>
+    </div>
+    <div id="summarySpinner" class="spinner hidden" data-i18n="loadingMsg"></div>
+
+    <div class="center">
+      <span class="backlink" onclick="showForm()" data-i18n="backLink">← Back to report form</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ====== Apps Script 백엔드(API) 주소 ====== */
+var API = 'https://script.google.com/macros/s/AKfycbwfQuFOPHscP9omQMQEds44F8F-lggaIGR3D-Ap07XCfORNP5PbRzIAHc5IEW5-SrzP/exec';
+
+/* ---------- 다국어 UI 사전 ---------- */
+var I18N = {
+  ko: {
+    title:"전도 보고", subtitle:"오늘 만난 사람과 있었던 일을 나눠주세요",
+    nameLabel:"이름", selectName:"-- 이름을 선택하세요 --", otherOption:"기타 (직접 입력)", otherPlaceholder:"이름을 직접 입력하세요", dateLabel:"날짜",
+    contentLabel:"오늘 전도 내용 (만난 사람, 있었던 일)",
+    contentPlaceholder:"오늘 전도하면서 누구를 만났고 어떤 일이 있었는지 자유롭게 적어주세요.",
+    submitBtn:"제출하기", submittingMsg:"제출 중...",
+    successMsg:"제출되었습니다! 감사합니다 🙏", errorMsg:"오류가 발생했습니다. 다시 시도해주세요.",
+    nameRequired:"이름을 선택해주세요.", contentRequired:"내용을 적어주세요.",
+    adminLink:"📋 종합 보기 (관리자)", backLink:"← 보고 작성으로 돌아가기",
+    adminTitle:"목사님 보고용 종합", adminDateLabel:"날짜", loadBtn:"불러오기",
+    copyBtn:"복사하기", copiedMsg:"복사되었습니다!", copyNote:"위 내용이 복사됩니다. 카톡에 붙여넣어 보내세요.",
+    noReportsMsg:"해당 날짜의 보고가 없습니다.", loadingMsg:"불러오는 중..."
+  },
+  ja: {
+    title:"伝道報告", subtitle:"今日出会った人や出来事を分かち合ってください",
+    nameLabel:"名前", selectName:"-- お名前を選択 --", otherOption:"その他（直接入力）", otherPlaceholder:"お名前を直接入力", dateLabel:"日付",
+    contentLabel:"今日の伝道内容（出会った人、出来事）",
+    contentPlaceholder:"今日伝道で誰に出会い、どんな出来事があったか自由に書いてください。",
+    submitBtn:"提出する", submittingMsg:"送信中...",
+    successMsg:"提出されました！ありがとうございます 🙏", errorMsg:"エラーが発生しました。もう一度お試しください。",
+    nameRequired:"お名前を選択してください。", contentRequired:"内容を書いてください。",
+    adminLink:"📋 まとめを見る（管理者）", backLink:"← 報告フォームに戻る",
+    adminTitle:"牧師先生への報告まとめ", adminDateLabel:"日付", loadBtn:"読み込む",
+    copyBtn:"コピー", copiedMsg:"コピーしました！", copyNote:"上の内容がコピーされます。",
+    noReportsMsg:"この日付の報告はありません。", loadingMsg:"読み込み中..."
+  },
+  en: {
+    title:"Evangelism Report", subtitle:"Share who you met and what happened today",
+    nameLabel:"Your name", selectName:"-- Select your name --", otherOption:"Other (type your name)", otherPlaceholder:"Type your name", dateLabel:"Date",
+    contentLabel:"Today's evangelism (who you met, what happened)",
+    contentPlaceholder:"Write freely in your own language about who you met and what happened during evangelism today.",
+    submitBtn:"Submit", submittingMsg:"Submitting...",
+    successMsg:"Submitted! Thank you 🙏", errorMsg:"An error occurred. Please try again.",
+    nameRequired:"Please select your name.", contentRequired:"Please write your report.",
+    adminLink:"📋 View summary (admin)", backLink:"← Back to report form",
+    adminTitle:"Summary for Pastor", adminDateLabel:"Date", loadBtn:"Load",
+    copyBtn:"Copy", copiedMsg:"Copied!", copyNote:"The text above will be copied.",
+    noReportsMsg:"No reports for this date.", loadingMsg:"Loading..."
+  },
+  fr: {
+    title:"Rapport d'évangélisation", subtitle:"Partagez les personnes rencontrées et ce qui s'est passé aujourd'hui",
+    nameLabel:"Nom", selectName:"-- Sélectionnez votre nom --", otherOption:"Autre (saisir le nom)", otherPlaceholder:"Saisissez votre nom", dateLabel:"Date",
+    contentLabel:"Évangélisation d'aujourd'hui (personnes rencontrées, événements)",
+    contentPlaceholder:"Écrivez librement dans votre langue qui vous avez rencontré et ce qui s'est passé pendant l'évangélisation aujourd'hui.",
+    submitBtn:"Envoyer", submittingMsg:"Envoi en cours...",
+    successMsg:"Envoyé ! Merci 🙏", errorMsg:"Une erreur s'est produite. Veuillez réessayer.",
+    nameRequired:"Veuillez sélectionner votre nom.", contentRequired:"Veuillez écrire votre rapport.",
+    adminLink:"📋 Voir le récapitulatif (admin)", backLink:"← Retour au formulaire",
+    adminTitle:"Récapitulatif pour le pasteur", adminDateLabel:"Date", loadBtn:"Charger",
+    copyBtn:"Copier", copiedMsg:"Copié !", copyNote:"Le texte ci-dessus sera copié.",
+    noReportsMsg:"Aucun rapport pour cette date.", loadingMsg:"Chargement..."
+  },
+  es: {
+    title:"Informe de evangelismo", subtitle:"Comparte a quién conociste y qué pasó hoy",
+    nameLabel:"Nombre", selectName:"-- Selecciona tu nombre --", otherOption:"Otro (escribir nombre)", otherPlaceholder:"Escribe tu nombre", dateLabel:"Fecha",
+    contentLabel:"Evangelismo de hoy (personas que conociste, qué pasó)",
+    contentPlaceholder:"Escribe libremente en tu idioma a quién conociste y qué pasó durante el evangelismo hoy.",
+    submitBtn:"Enviar", submittingMsg:"Enviando...",
+    successMsg:"¡Enviado! Gracias 🙏", errorMsg:"Ocurrió un error. Inténtalo de nuevo.",
+    nameRequired:"Por favor selecciona tu nombre.", contentRequired:"Por favor escribe tu informe.",
+    adminLink:"📋 Ver resumen (admin)", backLink:"← Volver al formulario",
+    adminTitle:"Resumen para el pastor", adminDateLabel:"Fecha", loadBtn:"Cargar",
+    copyBtn:"Copiar", copiedMsg:"¡Copiado!", copyNote:"Se copiará el texto de arriba.",
+    noReportsMsg:"No hay informes para esta fecha.", loadingMsg:"Cargando..."
+  },
+  tl: {
+    title:"Ulat ng Ebanghelismo", subtitle:"Ibahagi kung sino ang nakilala mo at ano ang nangyari ngayon",
+    nameLabel:"Pangalan", selectName:"-- Piliin ang iyong pangalan --", otherOption:"Iba pa (i-type ang pangalan)", otherPlaceholder:"I-type ang iyong pangalan", dateLabel:"Petsa",
+    contentLabel:"Ebanghelismo ngayon (mga nakilala, mga nangyari)",
+    contentPlaceholder:"Magsulat nang malaya sa iyong wika kung sino ang nakilala mo at ano ang nangyari sa ebanghelismo ngayon.",
+    submitBtn:"Ipasa", submittingMsg:"Ipinapasa...",
+    successMsg:"Naipasa na! Salamat 🙏", errorMsg:"May naganap na error. Subukan muli.",
+    nameRequired:"Pakipili ang iyong pangalan.", contentRequired:"Pakisulat ang iyong ulat.",
+    adminLink:"📋 Tingnan ang buod (admin)", backLink:"← Bumalik sa form",
+    adminTitle:"Buod para sa Pastor", adminDateLabel:"Petsa", loadBtn:"I-load",
+    copyBtn:"Kopyahin", copiedMsg:"Nakopya!", copyNote:"Makokopya ang teksto sa itaas.",
+    noReportsMsg:"Walang ulat para sa petsang ito.", loadingMsg:"Naglo-load..."
+  },
+  my: {
+    title:"သာသနာပြုအစီရင်ခံစာ", subtitle:"ဒီနေ့တွေ့ဆုံခဲ့သူနဲ့ ဖြစ်ပျက်ခဲ့တာတွေကို မျှဝေပါ",
+    nameLabel:"အမည်", selectName:"-- သင့်အမည်ကို ရွေးပါ --", otherOption:"အခြား (အမည်ရိုက်ထည့်ရန်)", otherPlaceholder:"သင့်အမည်ကို ရိုက်ထည့်ပါ", dateLabel:"ရက်စွဲ",
+    contentLabel:"ဒီနေ့သာသနာပြုခြင်း (တွေ့ဆုံခဲ့သူများ၊ ဖြစ်ပျက်မှုများ)",
+    contentPlaceholder:"ဒီနေ့သာသနာပြုရာတွင် ဘယ်သူနဲ့တွေ့ဆုံခဲ့ပြီး ဘာတွေဖြစ်ပျက်ခဲ့သည်ကို သင့်ဘာသာစကားဖြင့် လွတ်လပ်စွာ ရေးပါ။",
+    submitBtn:"တင်သွင်းမည်", submittingMsg:"တင်သွင်းနေသည်...",
+    successMsg:"တင်သွင်းပြီးပါပြီ! ကျေးဇူးတင်ပါသည် 🙏", errorMsg:"အမှားဖြစ်ပွားခဲ့သည်။ ထပ်မံကြိုးစားပါ။",
+    nameRequired:"သင့်အမည်ကို ရွေးပါ။", contentRequired:"အစီရင်ခံစာ ရေးပါ။",
+    adminLink:"📋 အကျဉ်းချုပ်ကြည့်ရန် (စီမံခန့်ခွဲသူ)", backLink:"← ပုံစံသို့ ပြန်သွားရန်",
+    adminTitle:"သင်းအုပ်ဆရာအတွက် အကျဉ်းချုပ်", adminDateLabel:"ရက်စွဲ", loadBtn:"ဖွင့်ရန်",
+    copyBtn:"ကူးယူရန်", copiedMsg:"ကူးယူပြီးပါပြီ!", copyNote:"အပေါ်ကစာသားကို ကူးယူပါမည်။",
+    noReportsMsg:"ဤရက်စွဲအတွက် အစီရင်ခံစာမရှိပါ။", loadingMsg:"ဖွင့်နေသည်..."
+  }
+};
+
+var LANG = 'en';
+var lastSummaryText = '';
+
+window.onload = function () {
+  var saved = null;
+  try { saved = localStorage.getItem('uiLang'); } catch (e) {}
+  if (saved && I18N[saved]) LANG = saved;
+  document.getElementById('uiLang').value = LANG;
+
+  var today = todayStr();
+  document.getElementById('date').value = today;
+  document.getElementById('adminDate').value = today;
+
+  applyLang();
+  loadNames();
+};
+
+function todayStr() {
+  var d = new Date();
+  var m = ('0' + (d.getMonth() + 1)).slice(-2);
+  var day = ('0' + d.getDate()).slice(-2);
+  return d.getFullYear() + '-' + m + '-' + day;
+}
+
+function changeLang(v) {
+  LANG = v;
+  try { localStorage.setItem('uiLang', v); } catch (e) {}
+  applyLang();
+}
+
+function applyLang() {
+  var t = I18N[LANG] || I18N.en;
+  document.documentElement.lang = LANG;
+  document.getElementById('brandText').textContent = t.title;
+  var els = document.querySelectorAll('[data-i18n]');
+  for (var i = 0; i < els.length; i++) {
+    var key = els[i].getAttribute('data-i18n');
+    if (t[key] != null) els[i].textContent = t[key];
+  }
+  var phs = document.querySelectorAll('[data-i18n-ph]');
+  for (var j = 0; j < phs.length; j++) {
+    var k = phs[j].getAttribute('data-i18n-ph');
+    if (t[k] != null) phs[j].setAttribute('placeholder', t[k]);
+  }
+  var otherOpt = document.getElementById('otherOpt');
+  if (otherOpt) otherOpt.textContent = t.otherOption;
+}
+
+function tr(key) { return (I18N[LANG] || I18N.en)[key]; }
+
+/* ---------- 명단 로드 (Apps Script API) ---------- */
+function loadNames() {
+  fetch(API + '?action=getNames')
+    .then(function (r) { return r.json(); })
+    .then(function (res) { populateNames((res && res.names) || []); })
+    .catch(function () { populateNames([]); });
+}
+
+function populateNames(names) {
+  var sel = document.getElementById('name');
+  for (var i = 0; i < names.length; i++) {
+    var o = document.createElement('option');
+    o.value = names[i];
+    o.textContent = names[i];
+    sel.appendChild(o);
+  }
+  // "기타 (직접 입력)" 옵션
+  var other = document.createElement('option');
+  other.value = '__other__';
+  other.id = 'otherOpt';
+  other.textContent = tr('otherOption');
+  sel.appendChild(other);
+}
+
+function onNameChange() {
+  var sel = document.getElementById('name');
+  var other = document.getElementById('nameOther');
+  if (sel.value === '__other__') {
+    other.classList.remove('hidden');
+    other.focus();
+  } else {
+    other.classList.add('hidden');
+  }
+}
+
+/* ---------- 제출 (Apps Script API · POST) ---------- */
+function submitReport() {
+  var name = document.getElementById('name').value;
+  if (name === '__other__') {
+    name = document.getElementById('nameOther').value.trim();
+  }
+  var date = document.getElementById('date').value || todayStr();
+  var content = document.getElementById('content').value.trim();
+  var btn = document.getElementById('submitBtn');
+
+  if (!name) { showToast('err', tr('nameRequired')); return; }
+  if (!content) { showToast('err', tr('contentRequired')); return; }
+
+  btn.disabled = true;
+  btn.textContent = tr('submittingMsg');
+  document.getElementById('toast').className = 'toast';
+
+  fetch(API, {
+    method: 'POST',
+    body: JSON.stringify({ name: name, date: date, lang: LANG, content: content })
+  })
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+      btn.disabled = false;
+      btn.textContent = tr('submitBtn');
+      if (res && res.ok) {
+        showToast('ok', tr('successMsg'));
+        document.getElementById('content').value = '';
+        document.getElementById('name').value = '';
+        document.getElementById('nameOther').value = '';
+        document.getElementById('nameOther').classList.add('hidden');
+      } else {
+        showToast('err', tr('errorMsg'));
+      }
+    })
+    .catch(function () {
+      btn.disabled = false;
+      btn.textContent = tr('submitBtn');
+      showToast('err', tr('errorMsg'));
+    });
+}
+
+function showToast(type, msg) {
+  var toast = document.getElementById('toast');
+  toast.className = 'toast ' + type;
+  toast.textContent = msg;
+  if (type === 'ok') {
+    setTimeout(function () { toast.className = 'toast'; }, 4000);
+  }
+}
+
+function showAdmin() {
+  document.getElementById('formView').classList.add('hidden');
+  document.getElementById('adminView').classList.remove('hidden');
+}
+function showForm() {
+  document.getElementById('adminView').classList.add('hidden');
+  document.getElementById('formView').classList.remove('hidden');
+}
+
+/* ---------- 관리자 종합 (Apps Script API) ---------- */
+function loadSummary() {
+  var date = document.getElementById('adminDate').value;
+  if (!date) return;
+  document.getElementById('summaryWrap').classList.add('hidden');
+  document.getElementById('summarySpinner').classList.remove('hidden');
+
+  fetch(API + '?action=getReports&date=' + encodeURIComponent(date))
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+      document.getElementById('summarySpinner').classList.add('hidden');
+      renderSummary(date, (res && res.reports) || []);
+    })
+    .catch(function () {
+      document.getElementById('summarySpinner').classList.add('hidden');
+      renderSummary(date, []);
+    });
+}
+
+function renderSummary(date, rows) {
+  var box = document.getElementById('summaryBox');
+  document.getElementById('summaryWrap').classList.remove('hidden');
+  if (!rows || rows.length === 0) {
+    box.textContent = tr('noReportsMsg');
+    lastSummaryText = '';
+    return;
+  }
+  var text = '📋 ' + formatKoreanDate(date) + ' 전도 보고\n';
+  text += '━━━━━━━━━━━━━━━━\n\n';
+  for (var i = 0; i < rows.length; i++) {
+    text += '🙋 ' + rows[i].name + '\n';
+    text += rows[i].ko + '\n';
+    if (i < rows.length - 1) text += '\n';
+  }
+  lastSummaryText = text;
+  box.textContent = text;
+}
+
+function formatKoreanDate(d) {
+  var p = d.split('-');
+  if (p.length === 3) return p[0] + '년 ' + parseInt(p[1], 10) + '월 ' + parseInt(p[2], 10) + '일';
+  return d;
+}
+
+function copySummary() {
+  if (!lastSummaryText) return;
+  var done = function () { showToast('ok', tr('copiedMsg')); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(lastSummaryText).then(done, fallbackCopy);
+  } else {
+    fallbackCopy();
+  }
+  function fallbackCopy() {
+    var ta = document.createElement('textarea');
+    ta.value = lastSummaryText;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+}
+</script>
+</body>
+</html>
