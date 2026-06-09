@@ -46,6 +46,10 @@
       border: 1px solid var(--border); border-radius: 12px;
       background: #fff; color: var(--text); font-family: inherit;
     }
+    /* iOS Safari에서 날짜 값이 가운데로 쏠리는 현상 방지 → 다른 칸처럼 왼쪽 정렬 */
+    input[type="date"] { text-align: left; -webkit-appearance: none; appearance: none; min-height: 50px; }
+    input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
+    input[type="date"]::-webkit-calendar-picker-indicator { margin-left: auto; }
     textarea { min-height: 170px; resize: vertical; line-height: 1.55; }
     select:focus, input:focus, textarea:focus {
       outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.12);
