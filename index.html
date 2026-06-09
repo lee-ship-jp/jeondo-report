@@ -78,6 +78,14 @@
     .muted-note { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
     .row { display: flex; gap: 10px; align-items: flex-end; }
     .row > div { flex: 1; }
+    .daterow { display: flex; gap: 8px; align-items: center; }
+    .daterow input[type="date"] { flex: 1; }
+    .navbtn {
+      flex: 0 0 auto; padding: 12px 13px; font-size: 16px; font-weight: 700;
+      background: #fff; color: var(--blue); border: 1px solid var(--border);
+      border-radius: 12px; cursor: pointer; line-height: 1;
+    }
+    .navbtn:active { background: #eff6ff; }
     .spinner { color: var(--muted); font-size: 14px; padding: 12px 0; }
   </style>
 </head>
@@ -126,13 +134,17 @@
   <div id="adminView" class="card hidden">
     <h1 data-i18n="adminTitle">Summary for Pastor</h1>
 
-    <div class="row">
-      <div>
-        <label data-i18n="adminDateLabel">Date</label>
-        <input type="date" id="adminDate">
-      </div>
-      <button class="btn" style="flex:0 0 auto; width:auto; margin-top:0; padding:13px 20px;"
-              onclick="loadSummary()" data-i18n="loadBtn">Load</button>
+    <label data-i18n="adminDatesLabel">Days with reports</label>
+    <select id="adminDates" onchange="pickDate(this.value)">
+      <option value="" data-i18n="adminDatesEmpty"></option>
+    </select>
+
+    <label data-i18n="adminDateLabel">Date</label>
+    <div class="daterow">
+      <button class="navbtn" onclick="stepDate(-1)" title="이전 날">◀</button>
+      <input type="date" id="adminDate" onchange="loadSummary()">
+      <button class="navbtn" onclick="stepDate(1)" title="다음 날">▶</button>
+      <button class="navbtn" onclick="loadSummary()" title="새로고침">🔄</button>
     </div>
 
     <div id="summaryWrap" class="hidden">
@@ -164,7 +176,7 @@ var I18N = {
     successMsg:"제출되었습니다! 감사합니다 🙏", errorMsg:"오류가 발생했습니다. 다시 시도해주세요.",
     nameRequired:"이름을 선택해주세요.", contentRequired:"내용을 적어주세요.",
     adminLink:"📋 종합 보기 (관리자)", backLink:"← 보고 작성으로 돌아가기",
-    adminTitle:"목사님 보고용 종합", adminDateLabel:"날짜", loadBtn:"불러오기",
+    adminTitle:"목사님 보고용 종합", adminDatesLabel:"보고가 있는 날짜", adminDatesEmpty:"-- 날짜 선택 --", adminDateLabel:"날짜", loadBtn:"불러오기",
     copyBtn:"복사하기", copiedMsg:"복사되었습니다!", copyNote:"위 내용이 복사됩니다. 카톡에 붙여넣어 보내세요.",
     noReportsMsg:"해당 날짜의 보고가 없습니다.", loadingMsg:"불러오는 중..."
   },
@@ -177,7 +189,7 @@ var I18N = {
     successMsg:"提出されました！ありがとうございます 🙏", errorMsg:"エラーが発生しました。もう一度お試しください。",
     nameRequired:"お名前を選択してください。", contentRequired:"内容を書いてください。",
     adminLink:"📋 まとめを見る（管理者）", backLink:"← 報告フォームに戻る",
-    adminTitle:"牧師先生への報告まとめ", adminDateLabel:"日付", loadBtn:"読み込む",
+    adminTitle:"牧師先生への報告まとめ", adminDatesLabel:"報告がある日付", adminDatesEmpty:"-- 日付を選択 --", adminDateLabel:"日付", loadBtn:"読み込む",
     copyBtn:"コピー", copiedMsg:"コピーしました！", copyNote:"上の内容がコピーされます。",
     noReportsMsg:"この日付の報告はありません。", loadingMsg:"読み込み中..."
   },
@@ -190,7 +202,7 @@ var I18N = {
     successMsg:"Submitted! Thank you 🙏", errorMsg:"An error occurred. Please try again.",
     nameRequired:"Please select your name.", contentRequired:"Please write your report.",
     adminLink:"📋 View summary (admin)", backLink:"← Back to report form",
-    adminTitle:"Summary for Pastor", adminDateLabel:"Date", loadBtn:"Load",
+    adminTitle:"Summary for Pastor", adminDatesLabel:"Days with reports", adminDatesEmpty:"-- Select a date --", adminDateLabel:"Date", loadBtn:"Load",
     copyBtn:"Copy", copiedMsg:"Copied!", copyNote:"The text above will be copied.",
     noReportsMsg:"No reports for this date.", loadingMsg:"Loading..."
   },
@@ -203,7 +215,7 @@ var I18N = {
     successMsg:"Envoyé ! Merci 🙏", errorMsg:"Une erreur s'est produite. Veuillez réessayer.",
     nameRequired:"Veuillez sélectionner votre nom.", contentRequired:"Veuillez écrire votre rapport.",
     adminLink:"📋 Voir le récapitulatif (admin)", backLink:"← Retour au formulaire",
-    adminTitle:"Récapitulatif pour le pasteur", adminDateLabel:"Date", loadBtn:"Charger",
+    adminTitle:"Récapitulatif pour le pasteur", adminDatesLabel:"Jours avec rapports", adminDatesEmpty:"-- Choisir une date --", adminDateLabel:"Date", loadBtn:"Charger",
     copyBtn:"Copier", copiedMsg:"Copié !", copyNote:"Le texte ci-dessus sera copié.",
     noReportsMsg:"Aucun rapport pour cette date.", loadingMsg:"Chargement..."
   },
@@ -216,7 +228,7 @@ var I18N = {
     successMsg:"¡Enviado! Gracias 🙏", errorMsg:"Ocurrió un error. Inténtalo de nuevo.",
     nameRequired:"Por favor selecciona tu nombre.", contentRequired:"Por favor escribe tu informe.",
     adminLink:"📋 Ver resumen (admin)", backLink:"← Volver al formulario",
-    adminTitle:"Resumen para el pastor", adminDateLabel:"Fecha", loadBtn:"Cargar",
+    adminTitle:"Resumen para el pastor", adminDatesLabel:"Días con informes", adminDatesEmpty:"-- Selecciona una fecha --", adminDateLabel:"Fecha", loadBtn:"Cargar",
     copyBtn:"Copiar", copiedMsg:"¡Copiado!", copyNote:"Se copiará el texto de arriba.",
     noReportsMsg:"No hay informes para esta fecha.", loadingMsg:"Cargando..."
   },
@@ -229,7 +241,7 @@ var I18N = {
     successMsg:"Naipasa na! Salamat 🙏", errorMsg:"May naganap na error. Subukan muli.",
     nameRequired:"Pakipili ang iyong pangalan.", contentRequired:"Pakisulat ang iyong ulat.",
     adminLink:"📋 Tingnan ang buod (admin)", backLink:"← Bumalik sa form",
-    adminTitle:"Buod para sa Pastor", adminDateLabel:"Petsa", loadBtn:"I-load",
+    adminTitle:"Buod para sa Pastor", adminDatesLabel:"Mga araw na may ulat", adminDatesEmpty:"-- Pumili ng petsa --", adminDateLabel:"Petsa", loadBtn:"I-load",
     copyBtn:"Kopyahin", copiedMsg:"Nakopya!", copyNote:"Makokopya ang teksto sa itaas.",
     noReportsMsg:"Walang ulat para sa petsang ito.", loadingMsg:"Naglo-load..."
   },
@@ -242,7 +254,7 @@ var I18N = {
     successMsg:"တင်သွင်းပြီးပါပြီ! ကျေးဇူးတင်ပါသည် 🙏", errorMsg:"အမှားဖြစ်ပွားခဲ့သည်။ ထပ်မံကြိုးစားပါ။",
     nameRequired:"သင့်အမည်ကို ရွေးပါ။", contentRequired:"အစီရင်ခံစာ ရေးပါ။",
     adminLink:"📋 အကျဉ်းချုပ်ကြည့်ရန် (စီမံခန့်ခွဲသူ)", backLink:"← ပုံစံသို့ ပြန်သွားရန်",
-    adminTitle:"သင်းအုပ်ဆရာအတွက် အကျဉ်းချုပ်", adminDateLabel:"ရက်စွဲ", loadBtn:"ဖွင့်ရန်",
+    adminTitle:"သင်းအုပ်ဆရာအတွက် အကျဉ်းချုပ်", adminDatesLabel:"အစီရင်ခံစာရှိသည့်ရက်များ", adminDatesEmpty:"-- ရက်စွဲရွေးပါ --", adminDateLabel:"ရက်စွဲ", loadBtn:"ဖွင့်ရန်",
     copyBtn:"ကူးယူရန်", copiedMsg:"ကူးယူပြီးပါပြီ!", copyNote:"အပေါ်ကစာသားကို ကူးယူပါမည်။",
     noReportsMsg:"ဤရက်စွဲအတွက် အစီရင်ခံစာမရှိပါ။", loadingMsg:"ဖွင့်နေသည်..."
   }
@@ -387,10 +399,53 @@ function showToast(type, msg) {
 function showAdmin() {
   document.getElementById('formView').classList.add('hidden');
   document.getElementById('adminView').classList.remove('hidden');
+  loadAdminDates();   // 보고가 있는 날짜 목록을 받아 드롭다운 채우고 최신 날짜 자동 표시
 }
 function showForm() {
   document.getElementById('adminView').classList.add('hidden');
   document.getElementById('formView').classList.remove('hidden');
+}
+
+/* 보고가 있는 날짜 목록 로드 → 드롭다운 채우고 가장 최근 날짜 자동 표시 */
+function loadAdminDates() {
+  fetch(API + '?action=getReportDates')
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+      var dates = (res && res.dates) || [];
+      var sel = document.getElementById('adminDates');
+      sel.length = 1; // 안내 옵션만 남기고 비움
+      for (var i = 0; i < dates.length; i++) {
+        var o = document.createElement('option');
+        o.value = dates[i];
+        o.textContent = formatKoreanDate(dates[i]);
+        sel.appendChild(o);
+      }
+      // 가장 최근 보고 날짜를 자동 선택·표시 (없으면 오늘)
+      var target = dates.length ? dates[0] : document.getElementById('adminDate').value;
+      document.getElementById('adminDate').value = target;
+      sel.value = (dates.indexOf(target) >= 0) ? target : '';
+      loadSummary();
+    })
+    .catch(function () { loadSummary(); });
+}
+
+/* 드롭다운에서 날짜 선택 → 바로 표시 */
+function pickDate(d) {
+  if (!d) return;
+  document.getElementById('adminDate').value = d;
+  loadSummary();
+}
+
+/* 이전/다음 날로 이동 → 바로 표시 */
+function stepDate(delta) {
+  var inp = document.getElementById('adminDate');
+  var base = inp.value ? new Date(inp.value + 'T00:00:00') : new Date();
+  base.setDate(base.getDate() + delta);
+  var m = ('0' + (base.getMonth() + 1)).slice(-2);
+  var day = ('0' + base.getDate()).slice(-2);
+  inp.value = base.getFullYear() + '-' + m + '-' + day;
+  document.getElementById('adminDates').value = inp.value; // 목록에 있으면 동기화, 없으면 빈값
+  loadSummary();
 }
 
 /* ---------- 관리자 종합 (Apps Script API) ---------- */
@@ -423,7 +478,7 @@ function renderSummary(date, rows) {
   var text = '📋 ' + formatKoreanDate(date) + ' 전도 보고\n';
   text += '━━━━━━━━━━━━━━━━\n\n';
   for (var i = 0; i < rows.length; i++) {
-    text += '🙋 ' + rows[i].name + '\n';
+    text += '🙋 ' + (rows[i].nameKo || rows[i].name) + '\n';  // 한글 이름 우선
     text += rows[i].ko + '\n';
     if (i < rows.length - 1) text += '\n';
   }
