@@ -114,19 +114,43 @@
     <h1 data-i18n="title">Evangelism Report</h1>
     <p class="subtitle" data-i18n="subtitle"></p>
 
-    <label data-i18n="nameLabel">Your name</label>
-    <select id="name" onchange="onNameChange()">
-      <option value="" data-i18n="selectName"></option>
-    </select>
-    <input type="text" id="nameOther" class="hidden" data-i18n-ph="otherPlaceholder" style="margin-top:8px;">
+    <!-- 작성 단계: 이름·날짜·내용 입력 + 검토 화면으로 넘어가는 버튼 -->
+    <div id="editStep">
+      <label data-i18n="nameLabel">Your name</label>
+      <select id="name" onchange="onNameChange()">
+        <option value="" data-i18n="selectName"></option>
+      </select>
+      <input type="text" id="nameOther" class="hidden" data-i18n-ph="otherPlaceholder" style="margin-top:8px;" onchange="checkExisting()">
 
-    <label data-i18n="dateLabel">Date</label>
-    <input type="date" id="date">
+      <label data-i18n="dateLabel">Date</label>
+      <input type="date" id="date" onchange="checkExisting()">
 
-    <label data-i18n="contentLabel">Today's evangelism</label>
-    <textarea id="content" data-i18n-ph="contentPlaceholder"></textarea>
+      <label data-i18n="contentLabel">Today's evangelism</label>
+      <textarea id="content" data-i18n-ph="contentPlaceholder"></textarea>
 
-    <button class="btn" id="submitBtn" onclick="submitReport()" data-i18n="submitBtn">Submit</button>
+      <div class="muted-note hidden" id="alreadyNote" style="color:#b45309;"></div>
+
+      <button class="btn" id="submitBtn" onclick="reviewReport()" data-i18n="submitBtn">Submit</button>
+    </div>
+
+    <!-- 검토 단계: 제출 전 본인이 내용을 확인하고 수정할 수 있는 화면 -->
+    <div id="reviewStep" class="hidden">
+      <div class="summary-box" id="reviewContent"></div>
+      <div class="muted-note" data-i18n="reviewNote"></div>
+      <button class="btn" id="confirmBtn" onclick="doSubmit()" data-i18n="confirmBtn">Submit this</button>
+      <button class="navbtn" style="width:100%; margin-top:10px;" id="editBackBtn"
+              onclick="backToEdit()" data-i18n="editBtn">Edit</button>
+    </div>
+
+    <!-- 제출완료 단계: 이미 제출한 보고를 읽기 전용으로 보여주고, '수정하기'로 다시 고칠 수 있다 -->
+    <div id="submittedStep" class="hidden">
+      <div class="summary-box" id="submittedContent"></div>
+      <div class="muted-note" data-i18n="submittedNote"></div>
+      <button class="btn" id="editMineBtn" onclick="editMine()" data-i18n="editBtn">Edit</button>
+      <button class="navbtn" style="width:100%; margin-top:10px;" id="newReportBtn"
+              onclick="newReport()" data-i18n="newReportBtn">✚ New report</button>
+    </div>
+
     <div class="toast" id="toast"></div>
 
     <div class="center">
@@ -182,7 +206,12 @@ var I18N = {
     adminLink:"📋 종합 보기 (관리자)", backLink:"← 보고 작성으로 돌아가기",
     adminTitle:"목사님 보고용 종합", adminDatesLabel:"보고가 있는 날짜", adminDatesEmpty:"-- 날짜 선택 --", adminDateLabel:"날짜", loadBtn:"불러오기",
     copyBtn:"복사하기", copiedMsg:"복사되었습니다!", copyNote:"위 내용이 복사됩니다. 카톡에 붙여넣어 보내세요.",
-    noReportsMsg:"해당 날짜의 보고가 없습니다.", loadingMsg:"불러오는 중..."
+    noReportsMsg:"해당 날짜의 보고가 없습니다.", loadingMsg:"불러오는 중...",
+    reviewNote:"아래 내용을 확인하세요. 고칠 부분이 있으면 '수정'을 누르세요.",
+    editBtn:"✏️ 수정", confirmBtn:"✅ 이대로 제출",
+    alreadyNote:"오늘 이미 제출한 보고가 있어요. 내용을 고쳐서 다시 제출하면 기존 보고가 수정됩니다.",
+    updateBtn:"수정해서 다시 제출", updatedMsg:"보고가 수정되었습니다! 🙏", checkingMsg:"확인 중...",
+    submittedNote:"이미 제출한 보고입니다. 고치려면 '수정하기'를 누르세요.", newReportBtn:"✚ 새 보고 작성"
   },
   ja: {
     title:"伝道報告", subtitle:"今日出会った人や出来事を分かち合ってください",
@@ -195,7 +224,12 @@ var I18N = {
     adminLink:"📋 まとめを見る（管理者）", backLink:"← 報告フォームに戻る",
     adminTitle:"牧師先生への報告まとめ", adminDatesLabel:"報告がある日付", adminDatesEmpty:"-- 日付を選択 --", adminDateLabel:"日付", loadBtn:"読み込む",
     copyBtn:"コピー", copiedMsg:"コピーしました！", copyNote:"上の内容がコピーされます。",
-    noReportsMsg:"この日付の報告はありません。", loadingMsg:"読み込み中..."
+    noReportsMsg:"この日付の報告はありません。", loadingMsg:"読み込み中...",
+    reviewNote:"内容をご確認ください。直す箇所があれば「修正」を押してください。",
+    editBtn:"✏️ 修正", confirmBtn:"✅ この内容で提出",
+    alreadyNote:"本日すでに提出した報告があります。内容を直して再提出すると、既存の報告が更新されます。",
+    updateBtn:"修正して再提出", updatedMsg:"報告を修正しました！🙏", checkingMsg:"確認中...",
+    submittedNote:"すでに提出した報告です。直すには「修正」を押してください。", newReportBtn:"✚ 新しい報告"
   },
   en: {
     title:"Evangelism Report", subtitle:"Share who you met and what happened today",
@@ -208,7 +242,12 @@ var I18N = {
     adminLink:"📋 View summary (admin)", backLink:"← Back to report form",
     adminTitle:"Summary for Pastor", adminDatesLabel:"Days with reports", adminDatesEmpty:"-- Select a date --", adminDateLabel:"Date", loadBtn:"Load",
     copyBtn:"Copy", copiedMsg:"Copied!", copyNote:"The text above will be copied.",
-    noReportsMsg:"No reports for this date.", loadingMsg:"Loading..."
+    noReportsMsg:"No reports for this date.", loadingMsg:"Loading...",
+    reviewNote:"Please review your report. Tap 'Edit' to make changes.",
+    editBtn:"✏️ Edit", confirmBtn:"✅ Submit this",
+    alreadyNote:"You already submitted a report today. Editing and submitting again will update your existing report.",
+    updateBtn:"Update my report", updatedMsg:"Your report was updated! 🙏", checkingMsg:"Checking...",
+    submittedNote:"This report was already submitted. Tap 'Edit' to change it.", newReportBtn:"✚ New report"
   },
   fr: {
     title:"Rapport d'évangélisation", subtitle:"Partagez les personnes rencontrées et ce qui s'est passé aujourd'hui",
@@ -221,7 +260,12 @@ var I18N = {
     adminLink:"📋 Voir le récapitulatif (admin)", backLink:"← Retour au formulaire",
     adminTitle:"Récapitulatif pour le pasteur", adminDatesLabel:"Jours avec rapports", adminDatesEmpty:"-- Choisir une date --", adminDateLabel:"Date", loadBtn:"Charger",
     copyBtn:"Copier", copiedMsg:"Copié !", copyNote:"Le texte ci-dessus sera copié.",
-    noReportsMsg:"Aucun rapport pour cette date.", loadingMsg:"Chargement..."
+    noReportsMsg:"Aucun rapport pour cette date.", loadingMsg:"Chargement...",
+    reviewNote:"Veuillez vérifier votre rapport. Appuyez sur « Modifier » pour le changer.",
+    editBtn:"✏️ Modifier", confirmBtn:"✅ Envoyer ceci",
+    alreadyNote:"Vous avez déjà envoyé un rapport aujourd'hui. Le modifier et l'envoyer à nouveau mettra à jour votre rapport existant.",
+    updateBtn:"Mettre à jour mon rapport", updatedMsg:"Votre rapport a été mis à jour ! 🙏", checkingMsg:"Vérification...",
+    submittedNote:"Ce rapport a déjà été envoyé. Appuyez sur « Modifier » pour le changer.", newReportBtn:"✚ Nouveau rapport"
   },
   es: {
     title:"Informe de evangelismo", subtitle:"Comparte a quién conociste y qué pasó hoy",
@@ -234,7 +278,12 @@ var I18N = {
     adminLink:"📋 Ver resumen (admin)", backLink:"← Volver al formulario",
     adminTitle:"Resumen para el pastor", adminDatesLabel:"Días con informes", adminDatesEmpty:"-- Selecciona una fecha --", adminDateLabel:"Fecha", loadBtn:"Cargar",
     copyBtn:"Copiar", copiedMsg:"¡Copiado!", copyNote:"Se copiará el texto de arriba.",
-    noReportsMsg:"No hay informes para esta fecha.", loadingMsg:"Cargando..."
+    noReportsMsg:"No hay informes para esta fecha.", loadingMsg:"Cargando...",
+    reviewNote:"Revisa tu informe. Toca «Editar» para hacer cambios.",
+    editBtn:"✏️ Editar", confirmBtn:"✅ Enviar esto",
+    alreadyNote:"Ya enviaste un informe hoy. Si lo editas y lo envías de nuevo, se actualizará tu informe existente.",
+    updateBtn:"Actualizar mi informe", updatedMsg:"¡Tu informe se actualizó! 🙏", checkingMsg:"Comprobando...",
+    submittedNote:"Este informe ya fue enviado. Toca «Editar» para cambiarlo.", newReportBtn:"✚ Nuevo informe"
   },
   tl: {
     title:"Ulat ng Ebanghelismo", subtitle:"Ibahagi kung sino ang nakilala mo at ano ang nangyari ngayon",
@@ -247,7 +296,12 @@ var I18N = {
     adminLink:"📋 Tingnan ang buod (admin)", backLink:"← Bumalik sa form",
     adminTitle:"Buod para sa Pastor", adminDatesLabel:"Mga araw na may ulat", adminDatesEmpty:"-- Pumili ng petsa --", adminDateLabel:"Petsa", loadBtn:"I-load",
     copyBtn:"Kopyahin", copiedMsg:"Nakopya!", copyNote:"Makokopya ang teksto sa itaas.",
-    noReportsMsg:"Walang ulat para sa petsang ito.", loadingMsg:"Naglo-load..."
+    noReportsMsg:"Walang ulat para sa petsang ito.", loadingMsg:"Naglo-load...",
+    reviewNote:"Pakisuri ang iyong ulat. Pindutin ang 'I-edit' para baguhin.",
+    editBtn:"✏️ I-edit", confirmBtn:"✅ Ipasa ito",
+    alreadyNote:"May naipasa ka nang ulat ngayong araw. Kapag in-edit at ipinasa ulit, ma-update ang iyong dating ulat.",
+    updateBtn:"I-update ang ulat ko", updatedMsg:"Na-update ang iyong ulat! 🙏", checkingMsg:"Sinusuri...",
+    submittedNote:"Naipasa na ang ulat na ito. Pindutin ang 'I-edit' para baguhin.", newReportBtn:"✚ Bagong ulat"
   },
   my: {
     title:"သာသနာပြုအစီရင်ခံစာ", subtitle:"ဒီနေ့တွေ့ဆုံခဲ့သူနဲ့ ဖြစ်ပျက်ခဲ့တာတွေကို မျှဝေပါ",
@@ -260,12 +314,18 @@ var I18N = {
     adminLink:"📋 အကျဉ်းချုပ်ကြည့်ရန် (စီမံခန့်ခွဲသူ)", backLink:"← ပုံစံသို့ ပြန်သွားရန်",
     adminTitle:"သင်းအုပ်ဆရာအတွက် အကျဉ်းချုပ်", adminDatesLabel:"အစီရင်ခံစာရှိသည့်ရက်များ", adminDatesEmpty:"-- ရက်စွဲရွေးပါ --", adminDateLabel:"ရက်စွဲ", loadBtn:"ဖွင့်ရန်",
     copyBtn:"ကူးယူရန်", copiedMsg:"ကူးယူပြီးပါပြီ!", copyNote:"အပေါ်ကစာသားကို ကူးယူပါမည်။",
-    noReportsMsg:"ဤရက်စွဲအတွက် အစီရင်ခံစာမရှိပါ။", loadingMsg:"ဖွင့်နေသည်..."
+    noReportsMsg:"ဤရက်စွဲအတွက် အစီရင်ခံစာမရှိပါ။", loadingMsg:"ဖွင့်နေသည်...",
+    reviewNote:"သင့်အစီရင်ခံစာကို စစ်ဆေးပါ။ ပြင်ရန် 'ပြင်ဆင်ရန်' ကိုနှိပ်ပါ။",
+    editBtn:"✏️ ပြင်ဆင်ရန်", confirmBtn:"✅ ဤအတိုင်းတင်ရန်",
+    alreadyNote:"ဒီနေ့ သင်တင်သွင်းပြီးသား အစီရင်ခံစာ ရှိပါသည်။ ပြင်ဆင်၍ ပြန်တင်လျှင် ယခင်အစီရင်ခံစာကို ပြင်ဆင်မည်ဖြစ်သည်။",
+    updateBtn:"ကျွန်ုပ်၏အစီရင်ခံစာ ပြင်ဆင်ရန်", updatedMsg:"သင့်အစီရင်ခံစာ ပြင်ဆင်ပြီးပါပြီ! 🙏", checkingMsg:"စစ်ဆေးနေသည်...",
+    submittedNote:"ဤအစီရင်ခံစာကို တင်သွင်းပြီးဖြစ်သည်။ ပြင်ရန် 'ပြင်ဆင်ရန်' ကိုနှိပ်ပါ။", newReportBtn:"✚ အသစ်ရေးရန်"
   }
 };
 
 var LANG = 'en';
 var lastSummaryText = '';
+var editingExisting = false;  // 오늘 이미 제출한 보고를 수정 중인지 여부
 
 window.onload = function () {
   var saved = null;
@@ -310,9 +370,23 @@ function applyLang() {
   }
   var otherOpt = document.getElementById('otherOpt');
   if (otherOpt) otherOpt.textContent = t.otherOption;
+  refreshSubmitLabel();
+}
+
+/* 제출 버튼 글자 — 수정 모드면 '수정해서 다시 제출', 아니면 '제출하기' */
+function refreshSubmitLabel() {
+  var btn = document.getElementById('submitBtn');
+  if (btn) btn.textContent = tr(editingExisting ? 'updateBtn' : 'submitBtn');
 }
 
 function tr(key) { return (I18N[LANG] || I18N.en)[key]; }
+
+/* 현재 화면에 입력된 이름(기타면 직접입력 값) 반환 */
+function currentName() {
+  var v = document.getElementById('name').value;
+  if (v === '__other__') v = document.getElementById('nameOther').value.trim();
+  return v;
+}
 
 /* ---------- 명단 로드 (Apps Script API) ---------- */
 function loadNames() {
@@ -347,17 +421,98 @@ function onNameChange() {
   } else {
     other.classList.add('hidden');
   }
+  checkExisting();
 }
 
-/* ---------- 제출 (Apps Script API · POST) ---------- */
-function submitReport() {
-  var name = document.getElementById('name').value;
-  if (name === '__other__') {
-    name = document.getElementById('nameOther').value.trim();
-  }
+/* 작성/검토/제출완료 세 단계 중 하나만 보이게 전환 */
+function showStep(step) {
+  ['editStep', 'reviewStep', 'submittedStep'].forEach(function (id) {
+    document.getElementById(id).classList.toggle('hidden', id !== step);
+  });
+}
+
+/* ---------- 이름·날짜 선택 시: 그날 본인 보고가 있으면 '제출완료' 화면을 보여준다 ---------- */
+function checkExisting() {
+  var name = currentName();
+  var date = document.getElementById('date').value || todayStr();
+
+  // 이름이 아직 없으면(미선택/기타 미입력) 그대로 작성 화면 유지
+  if (!name) { setEditingMode(false); showStep('editStep'); return; }
+
+  fetch(API + '?action=getMyReport&name=' + encodeURIComponent(name) + '&date=' + encodeURIComponent(date))
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+      var rep = res && res.report;
+      if (rep && rep.exists) {
+        // 이미 제출한 보고가 있으면 원문을 채워두고, 읽기 전용 '제출완료' 화면을 보여준다
+        document.getElementById('content').value = rep.content || '';
+        showSubmitted(rep.content || '');
+      } else {
+        setEditingMode(false);
+        showStep('editStep');
+      }
+    })
+    .catch(function () { setEditingMode(false); showStep('editStep'); });
+}
+
+function setEditingMode(on) {
+  editingExisting = on;
+  var note = document.getElementById('alreadyNote');
+  if (on) { note.textContent = tr('alreadyNote'); note.classList.remove('hidden'); }
+  else { note.classList.add('hidden'); }
+  refreshSubmitLabel();
+}
+
+/* ---------- 제출완료 화면: 이미 낸 보고를 읽기 전용으로 보여줌 ---------- */
+function showSubmitted(content) {
+  document.getElementById('submittedContent').textContent = content;
+  editingExisting = true;          // 이 보고를 고치면 기존 건이 갱신(업서트)된다
+  showStep('submittedStep');
+}
+
+/* '수정하기' → 입력 화면으로 (내용은 이미 채워져 있음) */
+function editMine() {
+  setEditingMode(true);
+  showStep('editStep');
+  document.getElementById('content').focus();
+}
+
+/* '새 보고 작성' → 폼을 비우고 작성 화면으로 (공용 기기에서 다음 사람용) */
+function newReport() {
+  document.getElementById('content').value = '';
+  document.getElementById('name').value = '';
+  document.getElementById('nameOther').value = '';
+  document.getElementById('nameOther').classList.add('hidden');
+  setEditingMode(false);
+  showStep('editStep');
+}
+
+/* ---------- 1단계: 제출 전 검토 화면으로 ---------- */
+function reviewReport() {
+  var name = currentName();
+  var content = document.getElementById('content').value.trim();
+
+  if (!name) { showToast('err', tr('nameRequired')); return; }
+  if (!content) { showToast('err', tr('contentRequired')); return; }
+
+  document.getElementById('reviewContent').textContent = content;
+  document.getElementById('confirmBtn').textContent = tr(editingExisting ? 'updateBtn' : 'confirmBtn');
+  document.getElementById('toast').className = 'toast';
+  showStep('reviewStep');
+}
+
+/* 검토 화면 → 다시 작성으로 */
+function backToEdit() {
+  showStep('editStep');
+}
+
+/* ---------- 2단계: 실제 제출/수정 (Apps Script API · POST) ---------- */
+function doSubmit() {
+  var name = currentName();
   var date = document.getElementById('date').value || todayStr();
   var content = document.getElementById('content').value.trim();
-  var btn = document.getElementById('submitBtn');
+  var btn = document.getElementById('confirmBtn');
+  var wasEditing = editingExisting;
 
   if (!name) { showToast('err', tr('nameRequired')); return; }
   if (!content) { showToast('err', tr('contentRequired')); return; }
@@ -373,20 +528,19 @@ function submitReport() {
     .then(function (r) { return r.json(); })
     .then(function (res) {
       btn.disabled = false;
-      btn.textContent = tr('submitBtn');
+      btn.textContent = tr(wasEditing ? 'updateBtn' : 'confirmBtn');
       if (res && res.ok) {
-        showToast('ok', tr('successMsg'));
-        document.getElementById('content').value = '';
-        document.getElementById('name').value = '';
-        document.getElementById('nameOther').value = '';
-        document.getElementById('nameOther').classList.add('hidden');
+        // 백엔드가 갱신했는지(updated) 또는 화면이 수정 모드였는지로 메시지 결정
+        showToast('ok', tr((res.updated || wasEditing) ? 'updatedMsg' : 'successMsg'));
+        // 제출 후엔 '제출완료' 화면을 보여줘서, 나중에 '수정하기'로 다시 고칠 수 있게 한다
+        showSubmitted(content);
       } else {
         showToast('err', tr('errorMsg'));
       }
     })
     .catch(function () {
       btn.disabled = false;
-      btn.textContent = tr('submitBtn');
+      btn.textContent = tr(wasEditing ? 'updateBtn' : 'confirmBtn');
       showToast('err', tr('errorMsg'));
     });
 }
